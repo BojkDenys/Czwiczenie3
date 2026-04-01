@@ -66,9 +66,14 @@ public sealed class ZadaniaLinq
     /// </summary>
     public IEnumerable<string> Zadanie04_PierwszyPrzedmiotAnalityczny()
     {
-        throw Niezaimplementowano(nameof(Zadanie04_PierwszyPrzedmiotAnalityczny));
+        var przedmiot = DaneUczelni.Przedmioty
+            .FirstOrDefault(p => p.Kategoria == "Analytics");
+ 
+        if (przedmiot == null)
+            return new[] { "Nie znaleziono przedmiotu z kategorii Analytics." };
+ 
+        return new[] { $"{przedmiot.Nazwa} | start: {przedmiot.DataStartu:yyyy-MM-dd}" };
     }
-
     /// <summary>
     /// Zadanie:
     /// Sprawdź, czy w danych istnieje przynajmniej jeden nieaktywny zapis.
