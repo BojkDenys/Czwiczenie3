@@ -313,7 +313,17 @@ public sealed class ZadaniaLinq
     /// </summary>
     public IEnumerable<string> Zadanie16_NajwyzszaOcenaKazdegoStudenta()
     {
-        throw Niezaimplementowano(nameof(Zadanie16_NajwyzszaOcenaKazdegoStudenta));
+        return DaneUczelni.Studenci
+            .Select(s => new
+            {
+                Student = s,
+                Oceny = DaneUczelni.Zapisy
+                    .Where(z => z.StudentId == s.Id && z.OcenaKoncowa.HasValue)
+                    .Select(z => z.OcenaKoncowa!.Value)
+                    .ToList()
+            })
+            .Where(x => x.Oceny.Any())
+            .Select(x => $"{x.Student.Imie} {x.Student.Nazwisko} | max ocena: {x.Oceny.Max():F1}");
     }
 
     /// <summary>
@@ -331,7 +341,15 @@ public sealed class ZadaniaLinq
     /// </summary>
     public IEnumerable<string> Wyzwanie01_StudenciZWiecejNizJednymAktywnymPrzedmiotem()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie01_StudenciZWiecejNizJednymAktywnymPrzedmiotem));
+        return DaneUczelni.Studenci
+            .Select(s => new
+            {
+                Student = s,
+                AktywneZapisy = DaneUczelni.Zapisy
+                    .Count(z => z.StudentId == s.Id && z.CzyAktywny)
+            })
+            .Where(x => x.AktywneZapisy > 1)
+            .Select(x => $"{x.Student.Imie} {x.Student.Nazwisko} | aktywnych zapisów: {x.AktywneZapisy}");
     }
 
     /// <summary>
@@ -348,9 +366,14 @@ public sealed class ZadaniaLinq
     /// </summary>
     public IEnumerable<string> Wyzwanie02_PrzedmiotyStartujaceWKwietniuBezOcenKoncowych()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie02_PrzedmiotyStartujaceWKwietniuBezOcenKoncowych));
+        return DaneUczelni.Przedmioty
+            .Where(p => p.DataStartu.Month == 4 && p.DataStartu.Year == 2026)
+            .Where(p =>
+                !DaneUczelni.Zapisy
+                    .Any(z => z.PrzedmiotId == p.Id && z.OcenaKoncowa.HasValue)
+            )
+            .Select(p => $"{p.Nazwa} | start: {p.DataStartu:yyyy-MM-dd}");
     }
-
     /// <summary>
     /// Wyzwanie:
     /// Oblicz średnią ocen końcowych dla każdego prowadzącego na podstawie wszystkich jego przedmiotów.
