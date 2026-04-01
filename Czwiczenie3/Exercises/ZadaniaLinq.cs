@@ -54,6 +54,7 @@ public sealed class ZadaniaLinq
             .ThenBy(s => s.Imie)
             .Select(s => $"{s.NumerIndeksu} | {s.Nazwisko} {s.Imie}");
     }
+
     /// <summary>
     /// Zadanie:
     /// Znajdź pierwszy przedmiot z kategorii Analytics.
@@ -68,12 +69,13 @@ public sealed class ZadaniaLinq
     {
         var przedmiot = DaneUczelni.Przedmioty
             .FirstOrDefault(p => p.Kategoria == "Analytics");
- 
+
         if (przedmiot == null)
             return new[] { "Nie znaleziono przedmiotu z kategorii Analytics." };
- 
+
         return new[] { $"{przedmiot.Nazwa} | start: {przedmiot.DataStartu:yyyy-MM-dd}" };
     }
+
     /// <summary>
     /// Zadanie:
     /// Sprawdź, czy w danych istnieje przynajmniej jeden nieaktywny zapis.
@@ -91,6 +93,7 @@ public sealed class ZadaniaLinq
         bool jest = DaneUczelni.Zapisy.Any(z => !z.CzyAktywny);
         return new[] { $"Czy istnieje nieaktywny zapis: {(jest ? "Tak" : "Nie")}" };
     }
+
     /// <summary>
     /// Zadanie:
     /// Sprawdź, czy każdy prowadzący ma uzupełnioną nazwę katedry.
@@ -105,7 +108,7 @@ public sealed class ZadaniaLinq
     {
         bool wszyscy = DaneUczelni.Prowadzacy
             .All(p => !string.IsNullOrWhiteSpace(p.Katedra));
- 
+
         return new[] { $"Czy wszyscy prowadzący mają katedrę: {(wszyscy ? "Tak" : "Nie")}" };
     }
 
@@ -174,7 +177,7 @@ public sealed class ZadaniaLinq
     {
         int rozmiarStrony = 2;
         int numerStrony = 2; // druga strona
- 
+
         return DaneUczelni.Przedmioty
             .OrderBy(p => p.Nazwa)
             .Skip((numerStrony - 1) * rozmiarStrony)
@@ -277,6 +280,7 @@ public sealed class ZadaniaLinq
             .GroupBy(x => x.Nazwa)
             .Select(g => $"{g.Key} | średnia: {g.Average(x => x.Ocena):F2}");
     }
+
     /// <summary>
     /// Zadanie:
     /// Dla każdego prowadzącego policz liczbę przypisanych przedmiotów.
@@ -374,6 +378,7 @@ public sealed class ZadaniaLinq
             )
             .Select(p => $"{p.Nazwa} | start: {p.DataStartu:yyyy-MM-dd}");
     }
+
     /// <summary>
     /// Wyzwanie:
     /// Oblicz średnią ocen końcowych dla każdego prowadzącego na podstawie wszystkich jego przedmiotów.
@@ -389,7 +394,22 @@ public sealed class ZadaniaLinq
     /// </summary>
     public IEnumerable<string> Wyzwanie03_ProwadzacyISredniaOcenNaIchPrzedmiotach()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie03_ProwadzacyISredniaOcenNaIchPrzedmiotach));
+        return DaneUczelni.Prowadzacy
+            .Select(pr =>
+            {
+                var oceny = DaneUczelni.Przedmioty
+                    .Where(p => p.ProwadzacyId == pr.Id)
+                    .SelectMany(p => DaneUczelni.Zapisy
+                        .Where(z => z.PrzedmiotId == p.Id && z.OcenaKoncowa.HasValue)
+                        .Select(z => z.OcenaKoncowa!.Value))
+                    .ToList();
+
+                string srednia = oceny.Any()
+                    ? oceny.Average().ToString("F2")
+                    : "brak ocen";
+
+                return $"{pr.Imie} {pr.Nazwisko} | średnia ocen: {srednia}";
+            });
     }
 
     /// <summary>
@@ -407,7 +427,16 @@ public sealed class ZadaniaLinq
     /// </summary>
     public IEnumerable<string> Wyzwanie04_MiastaILiczbaAktywnychZapisow()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie04_MiastaILiczbaAktywnychZapisow));
+        return DaneUczelni.Studenci
+            .Join(
+                DaneUczelni.Zapisy.Where(z => z.CzyAktywny),
+                s => s.Id,
+                z => z.StudentId,
+                (s, z) => s.Miasto
+            )
+            .GroupBy(miasto => miasto)
+            .OrderByDescending(g => g.Count())
+            .Select(g => $"{g.Key} | aktywnych zapisów: {g.Count()}");
     }
 
     private static NotImplementedException Niezaimplementowano(string nazwaMetody)
